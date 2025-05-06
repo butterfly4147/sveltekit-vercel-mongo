@@ -2,20 +2,46 @@
 	import { page } from '$app/stores';
 	import logo from './svelte-logo.svg';
 
-	// 安全获取路径名的函数，避免直接访问可能导致兼容性问题的属性
+	// 超安全的路径处理
 	function getPathname(pageStore) {
+		if (!pageStore) return '/';
+
+		// 値容所有可能的情况
+		let path = '/';
+		
 		try {
-			// 尝试获取标准方式
-			return pageStore?.url?.pathname || '';
+			// 直接访问 pathname
+			if (pageStore.url && typeof pageStore.url.pathname === 'string') {
+				path = pageStore.url.pathname;
+			}
+			// 如果 url 是字符串
+			else if (pageStore.path) {
+				path = pageStore.path;
+			}
+			// 尝试从 url 实例提取
+			else if (pageStore.url && typeof pageStore.url === 'object') {
+				// 单纯地检测当前路径
+				const currentPath = window?.location?.pathname;
+				if (currentPath) {
+					path = currentPath;
+				}
+			}
 		} catch (e) {
-			// 如果出错，尝试替代方法
-			const url = pageStore?.url?.toString() || '';
-			const urlObj = new URL(url, 'http://localhost');
-			return urlObj.pathname;
+			console.log('Error getting pathname', e);
+			// 默认值保持为 '/'
 		}
+
+		return path;
 	}
 
-	$: pathname = getPathname($page);
+	// 检测当前路径是否匹配
+	function isCurrentPath(targetPath) {
+		try {
+			return getPathname($page) === targetPath;
+		} catch (e) {
+			return false;
+		}
+	}
 </script>
 
 <header>
@@ -30,11 +56,11 @@
 			<path d="M0,0 L1,2 C1.5,3 1.5,3 2,3 L2,0 Z" />
 		</svg>
 		<ul>
-			<li class:active={pathname === '/'}><a sveltekit:prefetch href="/">Home</a></li>
-			<li class:active={pathname === '/about'}>
+			<li class:active={isCurrentPath('/')}><a sveltekit:prefetch href="/">Home</a></li>
+			<li class:active={isCurrentPath('/about')}>
 				<a sveltekit:prefetch href="/about">About</a>
 			</li>
-			<li class:active={pathname === '/todos'}>
+			<li class:active={isCurrentPath('/todos')}>
 				<a sveltekit:prefetch href="/todos">Todos</a>
 			</li>
 		</ul>
