@@ -32,7 +32,9 @@
 <script>
 import Counter from '$lib/Counter.svelte';
 
-export let apothegms;
+// 从 load() 返回的数据通过 `data` 传入
+export let data;
+let { apothegms } = data;
 
 async function onSubmit(e) {
   const formData = new FormData(e.target);
