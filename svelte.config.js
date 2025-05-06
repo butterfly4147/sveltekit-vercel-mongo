@@ -1,3 +1,4 @@
+// 使用auto适配器，它会自动检测Vercel环境
 import adapter from '@sveltejs/adapter-auto';
 
 /** @type {import('@sveltejs/kit').Config} */

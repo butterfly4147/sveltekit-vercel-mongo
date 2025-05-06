@@ -1,7 +1,7 @@
 import { MongoClient } from 'mongodb';
 import * as dotenv from 'dotenv';
-import fs from 'fs';
-import path from 'path';
+import { readFileSync, existsSync } from 'fs';
+import { join } from 'path';
 
 console.log('开始加载 MongoDB 配置...');
 
@@ -14,6 +14,17 @@ try {
   // 最后使用全局环境变量
   dotenv.config();
   
+  // 尝试直接读取.env.local文件(Vercel部署时可能需要)
+  try {
+    const envLocalPath = join(process.cwd(), '.env.local');
+    if (existsSync(envLocalPath)) {
+      const envContent = readFileSync(envLocalPath, 'utf8');
+      console.log('.env.local文件已读取');
+    }
+  } catch (readErr) {
+    console.log('读取.env.local文件失败:', readErr.message);
+  }
+  
   console.log('环境变量已加载');
 } catch (err) {
   console.error('加载环境变量出错:', err);
@@ -22,39 +33,51 @@ try {
 // 获取 MongoDB URI
 let mongoUri = '';
 
-// 从环境变量中获取URI
-if (process.env.MONGODB_URI) {
-  console.log('从环境变量中找到MongoDB URI');
-  const rawUri = process.env.MONGODB_URI;
+// 从环境变量中获取URI (优先考虑Vercel环境变量)
+let rawUri = process.env.MONGODB_URI || process.env.VERCEL_MONGODB_URI;
+
+if (rawUri) {
+  console.log('找到MongoDB URI');
   
-  // 处理密码中的特殊字符
-  try {
-    // 对URI进行解析和编码
-    const parts = rawUri.split('://');
-    const protocol = parts[0];
-    const restParts = parts[1].split('@');
-    
-    // 如果有多个@符号，就需要特殊处理
-    if (restParts.length > 1) {
-      const credentials = restParts[0].split(':');
-      if (credentials.length > 1) {
-        const username = credentials[0];
-        const password = encodeURIComponent(credentials[1]);
-        const host = restParts.slice(1).join('@');
-        
-        // 重构URI与编码密码
-        mongoUri = `${protocol}://${username}:${password}@${host}`;
-        console.log('MongoDB URI已重新编码');
-      } else {
-        mongoUri = rawUri; // 无法解析凭证
-      }
-    } else {
-      mongoUri = rawUri; // 无@符号，不需要特殊处理
-    }
-  } catch (parseError) {
-    console.error('MongoDB URI解析出错:', parseError);
-    // 出错时使用原始URI
+  // 如果URI已经包含编码字符，则直接使用
+  if (rawUri.includes('%')) {
+    console.log('使用已编码的MongoDB URI');
     mongoUri = rawUri;
+  } else {
+    // 否则进行编码处理
+    try {
+      // 对URI进行解析和编码
+      const parts = rawUri.split('://');
+      
+      if (parts.length === 2) {
+        const protocol = parts[0];
+        const restParts = parts[1].split('@');
+        
+        // 如果有多个@符号，就需要特殊处理
+        if (restParts.length > 1) {
+          const credentials = restParts[0].split(':');
+          if (credentials.length > 1) {
+            const username = credentials[0];
+            const password = encodeURIComponent(credentials[1]);
+            const host = restParts.slice(1).join('@');
+            
+            // 重构URI与编码密码
+            mongoUri = `${protocol}://${username}:${password}@${host}`;
+            console.log('MongoDB URI已重新编码');
+          } else {
+            mongoUri = rawUri; // 无法解析凭证
+          }
+        } else {
+          mongoUri = rawUri; // 无@符号，不需要特殊处理
+        }
+      } else {
+        mongoUri = rawUri; // 不是标准URI格式
+      }
+    } catch (parseError) {
+      console.error('MongoDB URI解析出错:', parseError);
+      // 出错时使用原始URI
+      mongoUri = rawUri;
+    }
   }
 } else {
   console.log('在环境变量中找不到 MONGODB_URI');
