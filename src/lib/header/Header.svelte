@@ -1,6 +1,21 @@
 <script>
 	import { page } from '$app/stores';
 	import logo from './svelte-logo.svg';
+
+	// 安全获取路径名的函数，避免直接访问可能导致兼容性问题的属性
+	function getPathname(pageStore) {
+		try {
+			// 尝试获取标准方式
+			return pageStore?.url?.pathname || '';
+		} catch (e) {
+			// 如果出错，尝试替代方法
+			const url = pageStore?.url?.toString() || '';
+			const urlObj = new URL(url, 'http://localhost');
+			return urlObj.pathname;
+		}
+	}
+
+	$: pathname = getPathname($page);
 </script>
 
 <header>
@@ -15,11 +30,11 @@
 			<path d="M0,0 L1,2 C1.5,3 1.5,3 2,3 L2,0 Z" />
 		</svg>
 		<ul>
-			<li class:active={$page.url.pathname === '/'}><a sveltekit:prefetch href="/">Home</a></li>
-			<li class:active={$page.url.pathname === '/about'}>
+			<li class:active={pathname === '/'}><a sveltekit:prefetch href="/">Home</a></li>
+			<li class:active={pathname === '/about'}>
 				<a sveltekit:prefetch href="/about">About</a>
 			</li>
-			<li class:active={$page.url.pathname === '/todos'}>
+			<li class:active={pathname === '/todos'}>
 				<a sveltekit:prefetch href="/todos">Todos</a>
 			</li>
 		</ul>
