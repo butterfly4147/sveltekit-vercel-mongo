@@ -2,16 +2,35 @@
 //export const prerender = true;
 
   export async function load({ params, fetch, session, stuff }) {
-    const res = await fetch('/apothegm', {
-      method: "GET",
-      headers: { 'content-type': 'application/json' }
-    });
-//    console.log("RES:" + res.status + " TEXT: " + await res.text());
-    return {
-      props: {
-        apothegms: await res.json()
+    try {
+      const res = await fetch('/apothegm', {
+        method: "GET",
+        headers: { 'content-type': 'application/json' }
+      });
+      
+      if (!res.ok) {
+        console.error('API请求失败:', res.status);
+        return {
+          props: {
+            apothegms: { apos: [], error: `API请求失败: ${res.status}` }
+          }
+        };
       }
-    };
+      
+      const data = await res.json();
+      return {
+        props: {
+          apothegms: data
+        }
+      };
+    } catch (error) {
+      console.error('加载数据时出错:', error);
+      return {
+        props: {
+          apothegms: { apos: [], error: error.message }
+        }
+      };
+    }
   }
 
 </script>
@@ -75,13 +94,23 @@ async function getApothegms() {
   </form>
 
 <div>
-<ul>
-  {#each apothegms.apos as apo}
-    <li>
-      {apo.apothegm}
-    </li>
-  {/each}
-</ul>
+  {#if apothegms.error}
+    <div class="error">
+      <p>错误: {apothegms.error}</p>
+    </div>
+  {/if}
+  
+  {#if apothegms.apos && apothegms.apos.length > 0}
+    <ul>
+      {#each apothegms.apos as apo}
+        <li>
+          {apo.apothegm} - <em>{apo.author || '匿名'}</em>
+        </li>
+      {/each}
+    </ul>
+  {:else}
+    <p>暂无数据</p>
+  {/if}
 </div>
 
 	<h2>
