@@ -11,24 +11,18 @@
       if (!res.ok) {
         console.error('API请求失败:', res.status);
         return {
-          props: {
-            apothegms: { apos: [], error: `API请求失败: ${res.status}` }
-          }
+          apothegms: { apos: [], error: `API请求失败: ${res.status}` }
         };
       }
       
       const data = await res.json();
       return {
-        props: {
-          apothegms: data
-        }
+        apothegms: data
       };
     } catch (error) {
       console.error('加载数据时出错:', error);
       return {
-        props: {
-          apothegms: { apos: [], error: error.message }
-        }
+        apothegms: { apos: [], error: error.message }
       };
     }
   }
