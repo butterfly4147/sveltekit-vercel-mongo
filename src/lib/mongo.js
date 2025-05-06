@@ -84,7 +84,13 @@ if (rawUri) {
 }
 
 // 如果仍然没有URI，使用备用的测试URI
-const uri = mongoUri || "mongodb+srv://test:test@cluster0.mongodb.net/test?retryWrites=true&w=majority";
+let uri = mongoUri || "mongodb+srv://test:test@cluster0.mongodb.net/test?retryWrites=true&w=majority";
+
+// 确保 URI 是正确的格式
+if (uri && !uri.startsWith('mongodb://') && !uri.startsWith('mongodb+srv://')) {
+  console.log('警告: MongoDB URI 格式不正确，添加前缀');
+  uri = 'mongodb+srv://' + uri;
+}
 
 // 安全地记录URI（隐藏凭据）
 const uriParts = uri.split('@');

@@ -1,47 +1,16 @@
 <script>
-	import { page } from '$app/stores';
+	// 完全移除对 $page.url.pathname 的依赖
 	import logo from './svelte-logo.svg';
 
-	// 超安全的路径处理
-	function getPathname(pageStore) {
-		if (!pageStore) return '/';
+	// 使用客户端脚本判断浏览器是否可用
+	let isBrowser = false;
 
-		// 値容所有可能的情况
-		let path = '/';
-		
-		try {
-			// 直接访问 pathname
-			if (pageStore.url && typeof pageStore.url.pathname === 'string') {
-				path = pageStore.url.pathname;
-			}
-			// 如果 url 是字符串
-			else if (pageStore.path) {
-				path = pageStore.path;
-			}
-			// 尝试从 url 实例提取
-			else if (pageStore.url && typeof pageStore.url === 'object') {
-				// 单纯地检测当前路径
-				const currentPath = window?.location?.pathname;
-				if (currentPath) {
-					path = currentPath;
-				}
-			}
-		} catch (e) {
-			console.log('Error getting pathname', e);
-			// 默认值保持为 '/'
-		}
+	// 在组件初始化时设置
+	import { onMount } from 'svelte';
 
-		return path;
-	}
-
-	// 检测当前路径是否匹配
-	function isCurrentPath(targetPath) {
-		try {
-			return getPathname($page) === targetPath;
-		} catch (e) {
-			return false;
-		}
-	}
+	onMount(() => {
+		isBrowser = true;
+	});
 </script>
 
 <header>
@@ -56,11 +25,14 @@
 			<path d="M0,0 L1,2 C1.5,3 1.5,3 2,3 L2,0 Z" />
 		</svg>
 		<ul>
-			<li class:active={isCurrentPath('/')}><a sveltekit:prefetch href="/">Home</a></li>
-			<li class:active={isCurrentPath('/about')}>
+			<!-- 移除对路径的依赖，仍然提供全部链接 -->
+			<li>
+				<a sveltekit:prefetch href="/">Home</a>
+			</li>
+			<li>
 				<a sveltekit:prefetch href="/about">About</a>
 			</li>
-			<li class:active={isCurrentPath('/todos')}>
+			<li>
 				<a sveltekit:prefetch href="/todos">Todos</a>
 			</li>
 		</ul>
