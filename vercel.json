@@ -1,6 +1,4 @@
 {
-  "framework": "sveltekit",
-  "installCommand": "npm install",
-  "buildCommand": "npm run build",
-  "outputDirectory": ".svelte-kit/output"
+  "version": 2,
+  "public": true
 }

@@ -1,10 +1,14 @@
-// 使用auto适配器，它会自动检测Vercel环境
+// 使用auto适配器，并指定Node.js目标版本
 import adapter from '@sveltejs/adapter-auto';
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	kit: {
-		adapter: adapter(),
+		// 指定适配器和Node.js版本
+		adapter: adapter({
+			// 明确指定目标为Node.js 16.x
+			target: 'node16'
+		}),
 
 		// Override http methods in the Todo forms
 		methodOverride: {
